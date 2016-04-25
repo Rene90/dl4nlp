@@ -9,6 +9,8 @@
 import numpy as np
 import pandas as pd
 
+import nltk
+
 from fuel.datasets.base import Dataset
 
 class ToyCorpus(Dataset):
