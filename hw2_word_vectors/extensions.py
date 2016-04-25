@@ -6,6 +6,7 @@
 # date:
 # description:
 #
+import numpy as np
 from blocks.extensions import SimpleExtension
 
 import matplotlib.pyplot as plt
@@ -33,12 +34,12 @@ class SaveWeights(SimpleExtension):
 # using PCA for dimensionality reduction
 #
 class VisualizeWordVectors(SimpleExtension):
-    def __init__(self, layers, prefixes, **kwargs):
+    def __init__(self, layers, labels, **kwargs):
         kwargs.setdefault("after_epoch", True)
         super(VisualizeWordVectors, self).__init__(**kwargs)
         self.step = 1
         self.layers = layers
-        self.prefixes = prefixes
+        self.labels = labels
 
     def do(self, callback_name, *args):
         pca = PCA(n_components=2)
@@ -46,10 +47,8 @@ class VisualizeWordVectors(SimpleExtension):
         word_vectors = (W1.get_value() + W2.get_value().T) / 2
         low_dim_embs = pca.fit_transform(word_vectors)
 
-        labels = dataset.vocabulary[1]
-
         plt.figure(figsize=(18, 18))  #in inches
-        for i, label in enumerate(labels):
+        for i, label in enumerate(self.labels):
             x, y = low_dim_embs[i,:]
             plt.scatter(x, y)
             plt.annotate(label,
@@ -59,8 +58,6 @@ class VisualizeWordVectors(SimpleExtension):
                          ha='right',
                          va='bottom')
 
-
-        for i in xrange(len(self.layers)):
-            filename = "%s_%d.npy" % (self.prefixes[i], self.step)
-            np.save(filename, self.layers[i].get_value())
+        filename = "./npy_stored/wv_%d.png" % (self.step)
+        plt.savefig(filename)
         self.step += 1

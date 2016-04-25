@@ -7,7 +7,6 @@
 # description:
 #
 import numpy as np
-import pandas as pd
 
 import zipfile
 
@@ -35,7 +34,7 @@ from blocks.extensions import FinishAfter, Printing, ProgressBar
 from blocks.extensions.monitoring import TrainingDataMonitoring
 from blocks_extras.extensions.plot import Plot
 
-from extensions import SaveWeights
+from extensions import SaveWeights, VisualizeWordVectors
 from datasets import ToyCorpus
 
 dataset = ToyCorpus()
@@ -89,7 +88,8 @@ main = MainLoop(data_stream = DataStream(
                     FinishAfter(after_n_epochs=10),
                     #Printing(),
                     TrainingDataMonitoring(variables=[cost], after_batch=True),
-                    SaveWeights(layers=[W1, W2], prefixes=["./w1","./w2"]),
+                    SaveWeights(layers=[W1, W2], prefixes=["./npy_stored/w1","./npy_stored/w2"]),
+                    VisualizeWordVectors(layers=[W1, W2], labels=dataset.vocabulary[1])
 ])
 
 main.run()
