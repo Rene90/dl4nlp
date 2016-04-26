@@ -88,8 +88,8 @@ main = MainLoop(data_stream = DataStream(
                     FinishAfter(after_n_epochs=10),
                     #Printing(),
                     TrainingDataMonitoring(variables=[cost], after_batch=True),
-                    SaveWeights(layers=[W1, W2], prefixes=["./npy_stored/w1","./npy_stored/w2"]),
-                    VisualizeWordVectors(layers=[W1, W2], labels=dataset.vocabulary[1])
+                    SaveWeights(layers=[W1, W2], prefixes=["./w1","./w2"]),
+                    VisualizeWordVectors(layers=[W1, W2], labels=dataset.vocabulary)
 ])
 
 main.run()
