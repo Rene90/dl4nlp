@@ -10,9 +10,7 @@ import numpy as np
 import pandas as pd
 
 from nltk.corpus import brown
-
 from itertools import izip
-
 from fuel.datasets.base import Dataset
 
 class ToyCorpus(Dataset):
