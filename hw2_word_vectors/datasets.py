@@ -51,6 +51,7 @@ class BrownCorpus(Dataset):
         self.word_dict = res[1]
         self.vocabulary_size = len(self.word_dict)
         self.num_instances = len(self.corpus) - (2 * window_size)
+        self.x, self.y = self.prepareStream()
         super(BrownCorpus, self).__init__(**kwargs)
 
     def next_window(self):
@@ -60,15 +61,19 @@ class BrownCorpus(Dataset):
         for i in xrange(self.num_instances):
             yield self.corpus[indices+i], self.corpus[i+self.window_size]
 
-    def get_data(self, state=None, request=None):
+    def prepareStream(self):
         if self.load:
-            return np.load("brown_corpus_context.npy"), np.load("brown_corpus_center.npy")
+            x, y = np.load("brown_corpus_context.npy"), np.load("brown_corpus_center.npy")
+        else:
+            x, y = [], []
+            for xx,yy in self.next_window():
+                x.append(xx); y.append(yy)
+        return np.array(x, dtype=np.int32), np.array(y, dtype=np.int32)
+
+    def get_data(self, state=None, request=None):
         if not request:
             request = range(self.num_instances)
-        x, y = [], []
-        for xx,yy in self.next_window():
-            x.append(xx); y.append(yy)
-        return np.array(x, dtype=np.int32)[request], np.array(y, dtype=np.int32)[request]
+        return self.x[request], self.y[request]
 
 def factorized_brown_corpus():
     from nltk.corpus import brown
