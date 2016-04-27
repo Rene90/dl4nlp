@@ -41,8 +41,8 @@ from extensions import SaveWeights, VisualizeWordVectors
 from datasets import ToyCorpus, BrownCorpus
 
 print "load corpus...",
-#dataset = BrownCorpus(window_size=1, load=True)
-dataset = ToyCorpus()
+dataset = BrownCorpus(window_size=1, load=True)
+#dataset = ToyCorpus()
 print "done"
 
 

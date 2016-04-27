@@ -64,10 +64,12 @@ class BrownCorpus(Dataset):
     def get_data(self, state=None, request=None):
         if self.load:
             return np.load("brown_corpus_context.npy"), np.load("brown_corpus_center.npy")
+        if not request:
+            request = range(self.num_instances)
         x, y = [], []
         for xx,yy in self.next_window():
             x.append(xx); y.append(yy)
-        return np.array(x, dtype=np.int32), np.array(y, dtype=np.int32)
+        return np.array(x, dtype=np.int32)[request], np.array(y, dtype=np.int32)[request]
 
 if __name__ == "__main__":
     bc = BrownCorpus(window_size=1)
