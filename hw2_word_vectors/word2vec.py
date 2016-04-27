@@ -38,7 +38,7 @@ from blocks.extensions.monitoring import TrainingDataMonitoring
 from blocks_extras.extensions.plot import Plot
 
 from extensions import SaveWeights, VisualizeWordVectors
-from datasets import ToyCorpus, BrownCorpus
+from datasets import BrownCorpus
 
 print "load corpus...",
 dataset = BrownCorpus(window_size=1)
@@ -78,7 +78,7 @@ cost.name = "loss"
 #
 main = MainLoop(data_stream = DataStream.default_stream(
                     dataset,
-                    iteration_scheme=SequentialScheme(dataset.num_instances, batch_size=50)),
+                    iteration_scheme=SequentialScheme(dataset.num_instances, batch_size=1024)),
                 algorithm = GradientDescent(
                     cost = cost,
                     parameters = cg.parameters,

@@ -9,6 +9,8 @@
 import numpy as np
 from blocks.extensions import SimpleExtension
 
+import matplotlib
+matplotlib.use("Pdf")
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 
