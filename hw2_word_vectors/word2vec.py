@@ -41,14 +41,14 @@ from extensions import SaveWeights, VisualizeWordVectors
 from datasets import BrownCorpus
 
 print "load corpus...",
-dataset = BrownCorpus(window_size=1)
+dataset = BrownCorpus(window_size=5)
 #dataset = ToyCorpus()
 print "done"
 
 
 VOCAB_DIM = dataset.vocabulary_size
 print "vocab size:", VOCAB_DIM
-EMBEDDING_DIM = 5
+EMBEDDING_DIM = 50
 
 Xs = tensor.imatrix("context")
 y = tensor.ivector('center')
@@ -78,18 +78,18 @@ cost.name = "loss"
 #
 main = MainLoop(data_stream = DataStream.default_stream(
                     dataset,
-                    iteration_scheme=SequentialScheme(dataset.num_instances, batch_size=1024)),
+                    iteration_scheme=SequentialScheme(dataset.num_instances, batch_size=512)),
                 algorithm = GradientDescent(
                     cost = cost,
                     parameters = cg.parameters,
                     step_rule = AdaGrad()),
                 extensions = [
                     ProgressBar(),
-                    FinishAfter(after_n_epochs=2),
+                    FinishAfter(after_n_epochs=10),
                     #Printing(),
                     TrainingDataMonitoring(variables=[cost], after_batch=True),
                     SaveWeights(layers=[W1, W2], prefixes=["./w1","./w2"]),
-                    VisualizeWordVectors(layers=[W1, W2], labels=dataset.word_dict),
+                    #VisualizeWordVectors(layers=[W1, W2], labels=dataset.word_dict),
 ])
 
 main.run()
