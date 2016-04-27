@@ -13,7 +13,7 @@ import zipfile
 import theano
 from theano import tensor
 
-theano.config.compute_test_value = 'warn'
+#theano.config.compute_test_value = 'warn'
 
 import fuel
 import h5py
@@ -41,8 +41,8 @@ from extensions import SaveWeights, VisualizeWordVectors
 from datasets import ToyCorpus, BrownCorpus
 
 print "load corpus...",
-#dataset = BrownCorpus(window_size=1, load=True)
-dataset = ToyCorpus()
+dataset = BrownCorpus(window_size=1)
+#dataset = ToyCorpus()
 print "done"
 
 

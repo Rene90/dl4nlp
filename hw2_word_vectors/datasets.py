@@ -9,7 +9,6 @@
 import numpy as np
 import pandas as pd
 
-from nltk.corpus import brown
 from itertools import izip
 from fuel.datasets.base import Dataset
 
@@ -47,7 +46,7 @@ class BrownCorpus(Dataset):
         self.axis_labels = None
         self.load = load
         self.window_size = window_size
-        res = pd.factorize(brown.words())
+        res = (np.load("brown_corpus.npy"),np.load("brown_dict.npy"))
         self.corpus = res[0]
         self.word_dict = res[1]
         self.vocabulary_size = len(self.word_dict)
@@ -64,14 +63,26 @@ class BrownCorpus(Dataset):
     def get_data(self, state=None, request=None):
         if self.load:
             return np.load("brown_corpus_context.npy"), np.load("brown_corpus_center.npy")
+        if not request:
+            request = range(self.num_instances)
         x, y = [], []
         for xx,yy in self.next_window():
             x.append(xx); y.append(yy)
-        return np.array(x, dtype=np.int32), np.array(y, dtype=np.int32)
+        return np.array(x, dtype=np.int32)[request], np.array(y, dtype=np.int32)[request]
+
+def factorized_brown_corpus():
+    from nltk.corpus import brown
+    res = pd.factorize(brown.words())
+    np.save("brown_corpus.npy", res[0])
+    np.save("brown_dict.npy", res[1])
 
 if __name__ == "__main__":
+    print "factorize brown corpus"
+    factorized_brown_corpus()
+    print "load corpus"
     bc = BrownCorpus(window_size=1)
     brown_data = bc.get_data()
     print brown_data
+    print "save it"
     np.save("brown_corpus_context.npy", brown_data[0])
     np.save("brown_corpus_center.npy", brown_data[1])
