@@ -44,22 +44,26 @@ class VisualizeWordVectors(SimpleExtension):
         self.labels = labels
 
     def do(self, callback_name, *args):
-        pca = PCA(n_components=2)
-        W1, W2 = self.layers
         word_vectors = (W1.get_value() + W2.get_value().T) / 2
-        low_dim_embs = pca.fit_transform(word_vectors)
-
-        plt.figure(figsize=(18, 18))  #in inches
-        for i, label in enumerate(self.labels):
-            x, y = low_dim_embs[i,:]
-            plt.scatter(x, y)
-            plt.annotate(label,
-                         xy=(x, y),
-                         xytext=(5, 2),
-                         textcoords='offset points',
-                         ha='right',
-                         va='bottom')
-
         filename = "./npy_stored/wv_%d.png" % (self.step)
-        plt.savefig(filename)
+        visualizeWordVector(word_vectors,self.labels,filename)
         self.step += 1
+
+def visualizeWordVector(word_vec,labels,path):
+    #init pca on word vector
+    pca = PCA(n_components=2)
+    print word_vec.shape
+    low_dim_embs = pca.fit_transform(word_vec)
+    print low_dim_embs.shape
+    # plot low dimensional word vectors into two-dimensional space
+    plt.figure(figsize=(18, 18))  #in inches
+    for i, label in enumerate(labels):
+        x, y = low_dim_embs[i,:]
+        plt.scatter(x, y)
+        plt.annotate(label,
+                     xy=(x, y),
+                     xytext=(5, 2),
+                     textcoords='offset points',
+                     ha='right',
+                     va='bottom')
+    plt.savefig(path)
