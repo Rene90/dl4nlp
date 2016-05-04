@@ -71,7 +71,11 @@ cg = ComputationGraph(cost)
 
 main_loop = MainLoop(
     data_stream = DataStream(
-        train_data
+        train_data,
+        iteration_scheme = SequentialScheme(
+            train_data.num_examples,
+            batch_size = 2
+        )
     ),
     algorithm = GradientDescent(
         cost  = cost,
