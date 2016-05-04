@@ -14,6 +14,16 @@ from blocks.bricks import Linear, Tanh, Rectifier, NDimensionalSoftmax
 from blocks.bricks.lookup import LookupTable
 from blocks.bricks.cost import CategoricalCrossEntropy
 
+from blocks.graph import ComputationGraph
+from blocks.algorithms import GradientDescent, Scale
+from blocks.extensions.monitoring import DataStreamMonitoring, TrainingDataMonitoring
+from blocks.main_loop import MainLoop
+
+from fuel.streams import DataStream
+from fuel.schemes import SequentialScheme
+
+from blocks.extensions import FinishAfter, Printing, ProgressBar
+
 from dataset import createDataset
 train_data,vocab_size = createDataset()
 
@@ -54,10 +64,11 @@ initLayers([W,H,S])
 activations = W.apply(x)
 hiddens = H.apply(activations)
 activations2 = S.apply(hiddens)
-y_hat = A.apply(activations2)
-cost = CategoricalCrossEntropy(y, y_hat, extra_ndim=1).mean()
+y_hat = A.apply(activations2, extra_ndim=1)
+cost = A.categorical_cross_entropy(y, activations2, extra_ndim=1).mean()
 
-"""
+cg = ComputationGraph(cost)
+
 main_loop = MainLoop(
     data_stream = DataStream(
         train_data
@@ -65,14 +76,15 @@ main_loop = MainLoop(
     algorithm = GradientDescent(
         cost  = cost,
         parameters = cg.parameters,
-        step_rule = Scale(learning_rate=0.1)),
-        extensions = [
-            DataStreamMonitoring(variables=[cost]),
-            FinishAfter(after_n_epochs=10),
-            Printing(),
-            #TrainingDataMonitoring([cost,], after_batch=True),
-        ]
+        step_rule = Scale(learning_rate=0.1)
+    ),
+    extensions = [
+        #DataStreamMonitoring(variables=[cost]),
+        FinishAfter(after_n_epochs=1),
+        Printing(),
+        #TrainingDataMonitoring([cost,], after_batch=True),
+    ]
 )
 main_loop.run()
-"""
+
 #f = theano.function([x], out, updates=...)
