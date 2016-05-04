@@ -22,6 +22,9 @@ from blocks.main_loop import MainLoop
 from fuel.streams import DataStream
 from fuel.schemes import SequentialScheme
 
+from blocks.filter import VariableFilter
+from blocks.roles import WEIGHT
+
 from blocks.extensions import FinishAfter, Printing, ProgressBar
 
 from dataset import createDataset
@@ -32,13 +35,15 @@ def initLayers(layers):
 
 HIDDEN_DIM = 100
 VOCAB_DIM = vocab_size
+print "Vocabulary size of", vocab_size
 
 # input
 x = tensor.imatrix('inchar')
-y = tensor.tensor3('outchar')
+y = tensor.imatrix('outchar')
 
 #
 W = LookupTable(
+    name = "W1",
     dim = HIDDEN_DIM,
     length = VOCAB_DIM,
     weights_init = initialization.IsotropicGaussian(0.01),
@@ -46,12 +51,14 @@ W = LookupTable(
 )
 # recurrent history weight
 H = SimpleRecurrent(
+    name = "H",
     dim = HIDDEN_DIM,
     activation = Rectifier(),
     weights_init = initialization.IsotropicGaussian(0.01)
 )
 #
 S = Linear(
+    name = "W2",
     input_dim = HIDDEN_DIM,
     output_dim = VOCAB_DIM,
     weights_init = initialization.IsotropicGaussian(0.01),
@@ -68,13 +75,15 @@ y_hat = A.apply(activations2, extra_ndim=1)
 cost = A.categorical_cross_entropy(y, activations2, extra_ndim=1).mean()
 
 cg = ComputationGraph(cost)
+#print VariableFilter(roles=[WEIGHT])(cg.variables)
+W1,H,W2 = VariableFilter(roles=[WEIGHT])(cg.variables)
 
 main_loop = MainLoop(
     data_stream = DataStream(
         train_data,
         iteration_scheme = SequentialScheme(
             train_data.num_examples,
-            batch_size = 2
+            batch_size = 1
         )
     ),
     algorithm = GradientDescent(
@@ -86,9 +95,17 @@ main_loop = MainLoop(
         #DataStreamMonitoring(variables=[cost]),
         FinishAfter(after_n_epochs=1),
         Printing(),
-        #TrainingDataMonitoring([cost,], after_batch=True),
+        TrainingDataMonitoring([cost,], after_batch=True),
     ]
 )
 main_loop.run()
 
-#f = theano.function([x], out, updates=...)
+#print W1.get_name()
+#print W1.get_value(), H.get_value(), W2.get_value()
+#print W1.get_value().shape, H.get_value().shape, W2.get_value().shape
+
+#x_test = tensor.ivector('input')
+#y_test = tensor.ivector('output')
+
+
+#f = theano.function([x], y_hat, updates=...)
