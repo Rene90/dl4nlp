@@ -6,6 +6,7 @@
 # description:
 #
 import numpy
+import numpy as np
 import theano
 from theano import tensor
 from blocks import initialization
@@ -29,8 +30,9 @@ from blocks.roles import WEIGHT
 from blocks.extensions import FinishAfter, Printing, ProgressBar
 from blocks.extensions.saveload import Checkpoint
 
-from dataset import createDataset
-train_data,vocab_size = createDataset()
+from dataset import Corpus, createDataset
+corpus = Corpus(open("corpus.txt").read())
+train_data,vocab_size = createDataset(corpus=corpus)
 
 def initLayers(layers):
     for l in layers: l.initialize()
@@ -115,10 +117,26 @@ model = main_loop.model
 
 
 def sample_chars(model,num_chars):
+    def softmax(v):
+        return np.exp(z) / np.sum(np.exp(z))
+
     v_inchar = model.variables[map(lambda x: x.name, model.variables).index("inchar")]
     v_softmax = model.variables[map(lambda x: x.name, model.variables).index("softmax_log_probabilities_output")]
+    v_init = model.shared_variables[map(lambda x: x.name, model.shared_variables).index("initial_state")]
+    v_states = model.intermediary_variables[map(lambda x: x.name, model.intermediary_variables).index("H_apply_states")]
+
+    #f = theano.function([v_inchar], v_softmax, updates=[(v_init, v_states)])
     f = theano.function([v_inchar], v_softmax)
     seq = np.array([[0]], dtype=np.int32)
+    out = seq
     for i in range(num_chars):
-        out = f(seq.astype(np.int32)).argmax(1)
+        out = f(np.atleast_2d(out).astype(np.int32))
+        dist = softmax(out[0])
+        print out
+        break
         seq = np.hstack([seq, np.atleast_2d(out)])
+    
+    return seq
+
+def example(num_chars):
+     print "".join([corpus.decode(sample_chars(model,100)[0]))

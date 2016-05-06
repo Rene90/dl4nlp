@@ -61,8 +61,8 @@ class Corpus(object):
         # assign internal vars
         self.corpus = words
         self.__vocab_size = len(vocab)
-        self.encode_dict = {idx:word for idx,word in enumerate(vocab)}
-        self.decode_dict = {word:idx for idx,word in enumerate(vocab)}
+        self.encode_dict = {word:idx for idx,word in enumerate(vocab)}
+        self.decode_dict = {idx:word} for idx,word in enumerate(vocab)}
 
     def get_splits(self,seq_len=25,shifted=False):
         corpus = self.corpus[1:] if shifted else self.corpus[:-1]
@@ -77,10 +77,10 @@ class Corpus(object):
         return self.corpus
 
     def encode(self,txt):
-        return [self.encode_dict.get(c, default=0) for c in txt]
+        return [self.encode_dict.get(c, 0) for c in txt]
 
     def decode(self,code):
-        return [self.decode_dict.get(i, default="<unk>") for i in code]
+        return [self.decode_dict.get(i, "<unk>") for i in code]
 
 if __name__ == "__main__":
     with open("corpus.txt") as fh:
