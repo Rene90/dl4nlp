@@ -14,6 +14,7 @@ from blocks.bricks import Linear, Tanh, Rectifier, NDimensionalSoftmax
 from blocks.bricks.lookup import LookupTable
 from blocks.bricks.cost import CategoricalCrossEntropy
 
+from blocks.model import Model
 from blocks.graph import ComputationGraph
 from blocks.algorithms import GradientDescent, Scale
 from blocks.extensions.monitoring import DataStreamMonitoring, TrainingDataMonitoring
@@ -26,6 +27,7 @@ from blocks.filter import VariableFilter
 from blocks.roles import WEIGHT
 
 from blocks.extensions import FinishAfter, Printing, ProgressBar
+from blocks.extensions.saveload import Checkpoint
 
 from dataset import createDataset
 train_data,vocab_size = createDataset()
@@ -33,9 +35,10 @@ train_data,vocab_size = createDataset()
 def initLayers(layers):
     for l in layers: l.initialize()
 
+SAVE_PATH = "./model_checkpoints/"
 HIDDEN_DIM = 100
 VOCAB_DIM = vocab_size
-print "Vocabulary size of", vocab_size
+#print "Vocabulary size of", vocab_size
 
 # input
 x = tensor.imatrix('inchar')
@@ -65,7 +68,9 @@ S = Linear(
     biases_init = initialization.Constant(0)
 )
 
-A = NDimensionalSoftmax()
+A = NDimensionalSoftmax(
+    name = "softmax"
+)
 
 initLayers([W,H,S])
 activations = W.apply(x)
@@ -93,19 +98,27 @@ main_loop = MainLoop(
     ),
     extensions = [
         #DataStreamMonitoring(variables=[cost]),
-        FinishAfter(after_n_epochs=1),
+        FinishAfter(after_n_epochs=10),
         Printing(),
         TrainingDataMonitoring([cost,], after_batch=True),
-    ]
+        #Checkpoint(SAVE_PATH, every_n_batches=2000),
+    ],
+    model = Model(cost)
 )
 main_loop.run()
 
-#print W1.get_name()
-#print W1.get_value(), H.get_value(), W2.get_value()
-#print W1.get_value().shape, H.get_value().shape, W2.get_value().shape
+#import blocks.serialization.load
 
-#x_test = tensor.ivector('input')
-#y_test = tensor.ivector('output')
+model = main_loop.model
+#print dir(model.variables)
+#print model.shared_variables
 
 
-#f = theano.function([x], y_hat, updates=...)
+def sample_chars(model,num_chars):
+    v_inchar = model.variables[map(lambda x: x.name, model.variables).index("inchar")]
+    v_softmax = model.variables[map(lambda x: x.name, model.variables).index("softmax_log_probabilities_output")]
+    f = theano.function([v_inchar], v_softmax)
+    seq = np.array([[0]], dtype=np.int32)
+    for i in range(num_chars):
+        out = f(seq.astype(np.int32)).argmax(1)
+        seq = np.hstack([seq, np.atleast_2d(out)])
