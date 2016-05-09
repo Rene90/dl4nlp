@@ -8,6 +8,11 @@
 import theano
 import numpy as np
 
+from blocks.extension.saveload import load
+SAVE_PATH = "./model_checkpoints/savepoint.pkl"
+
+from dataset import Corpus
+
 def sample_chars(model, num_chars, vocab_size, init_char=0):
 
     def get_var_from(name,vars):
@@ -32,3 +37,10 @@ def sample_chars(model, num_chars, vocab_size, init_char=0):
 
 def sample_text(model, num_chars, corpus):
      return "".join(corpus.decode(sample_chars(model, num_chars, corpus.vocab_size())[0]))
+
+corpus = Corpus(open("corpus.txt").read())
+
+main_loop = load(SAVE_PATH)
+model = main_loop.model
+
+print sample_text(model, 1000, corpus)
