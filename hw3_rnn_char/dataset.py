@@ -31,9 +31,8 @@ def createH5Dataset(path,corpus):
     f.flush()
     f.close()
 
-def createDataset(corpus=None):
+def createDataset(corpus=None, sequence_length=25):
     if not corpus: corpus = Corpus(open("corpus.txt").read())
-    sequence_length = 25
     vocab_size = corpus.vocab_size()
     in_splits  = corpus.get_splits(seq_len=sequence_length)
     out_splits = corpus.get_splits(seq_len=sequence_length, shifted=True)
@@ -62,13 +61,13 @@ class Corpus(object):
         self.corpus = words
         self.__vocab_size = len(vocab)
         self.encode_dict = {word:idx for idx,word in enumerate(vocab)}
-        self.decode_dict = {idx:word} for idx,word in enumerate(vocab)}
+        self.decode_dict = {idx:word for idx,word in enumerate(vocab)}
 
     def get_splits(self,seq_len=25,shifted=False):
         corpus = self.corpus[1:] if shifted else self.corpus[:-1]
         off_set = len(corpus) % seq_len
         # if last split is unequal the other ones, just skip it
-        return corpus[:-off_set].reshape((len(corpus)/seq_len,seq_len))
+        return corpus[:-off_set].reshape((len(corpus)/seq_len,seq_len)).T
 
     def vocab_size(self):
         return self.__vocab_size

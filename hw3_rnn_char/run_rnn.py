@@ -32,13 +32,13 @@ from blocks.extensions.saveload import Checkpoint
 
 from dataset import Corpus, createDataset
 corpus = Corpus(open("corpus.txt").read())
-train_data,vocab_size = createDataset(corpus=corpus)
+train_data,vocab_size = createDataset(corpus=corpus, sequence_length=100)
 
 def initLayers(layers):
     for l in layers: l.initialize()
 
-SAVE_PATH = "./model_checkpoints/"
-HIDDEN_DIM = 100
+SAVE_PATH = "./model_checkpoints/savepoint.pkl"
+HIDDEN_DIM = 500
 VOCAB_DIM = vocab_size
 #print "Vocabulary size of", vocab_size
 
@@ -90,7 +90,7 @@ main_loop = MainLoop(
         train_data,
         iteration_scheme = SequentialScheme(
             train_data.num_examples,
-            batch_size = 1
+            batch_size = 10
         )
     ),
     algorithm = GradientDescent(
@@ -100,43 +100,16 @@ main_loop = MainLoop(
     ),
     extensions = [
         #DataStreamMonitoring(variables=[cost]),
-        FinishAfter(after_n_epochs=10),
+        FinishAfter(after_n_epochs=20),
         Printing(),
+        ProgressBar(),
         TrainingDataMonitoring([cost,], after_batch=True),
-        #Checkpoint(SAVE_PATH, every_n_batches=2000),
+        Checkpoint(SAVE_PATH),
     ],
-    model = Model(cost)
+    model = Model(y_hat)
 )
 main_loop.run()
 
 #import blocks.serialization.load
 
 model = main_loop.model
-#print dir(model.variables)
-#print model.shared_variables
-
-
-def sample_chars(model,num_chars):
-    def softmax(v):
-        return np.exp(z) / np.sum(np.exp(z))
-
-    v_inchar = model.variables[map(lambda x: x.name, model.variables).index("inchar")]
-    v_softmax = model.variables[map(lambda x: x.name, model.variables).index("softmax_log_probabilities_output")]
-    v_init = model.shared_variables[map(lambda x: x.name, model.shared_variables).index("initial_state")]
-    v_states = model.intermediary_variables[map(lambda x: x.name, model.intermediary_variables).index("H_apply_states")]
-
-    #f = theano.function([v_inchar], v_softmax, updates=[(v_init, v_states)])
-    f = theano.function([v_inchar], v_softmax)
-    seq = np.array([[0]], dtype=np.int32)
-    out = seq
-    for i in range(num_chars):
-        out = f(np.atleast_2d(out).astype(np.int32))
-        dist = softmax(out[0])
-        print out
-        break
-        seq = np.hstack([seq, np.atleast_2d(out)])
-    
-    return seq
-
-def example(num_chars):
-     print "".join([corpus.decode(sample_chars(model,100)[0]))
