@@ -8,6 +8,8 @@
 import numpy as np
 import pandas as pd
 
+import string
+
 import h5py
 from fuel.datasets import IndexableDataset
 
@@ -31,11 +33,11 @@ def createH5Dataset(path,corpus):
     f.flush()
     f.close()
 
-def createDataset(corpus=None, sequence_length=25):
+def createDataset(corpus=None, sequence_length=25, repeat=1):
     if not corpus: corpus = Corpus(open("corpus.txt").read())
     vocab_size = corpus.vocab_size()
-    in_splits  = corpus.get_splits(seq_len=sequence_length)
-    out_splits = corpus.get_splits(seq_len=sequence_length, shifted=True)
+    in_splits  = corpus.get_splits(seq_len=sequence_length, repeat=repeat)
+    out_splits = corpus.get_splits(seq_len=sequence_length, repeat=repeat, shifted=True)
 
     df = IndexableDataset({
         'inchar': in_splits.astype(np.uint8),
@@ -55,7 +57,7 @@ class Corpus(object):
     def __init(self,corpus):
         # prepare corpus by replacing useless whitespace
         corpus = corpus.replace(r"  ", " ")
-        corpus = list(corpus.lower())
+        corpus = [c for c in corpus.lower() if c in string.printable]
         words,vocab = pd.factorize(corpus)
         # assign internal vars
         self.corpus = words
@@ -63,8 +65,9 @@ class Corpus(object):
         self.encode_dict = {word:idx for idx,word in enumerate(vocab)}
         self.decode_dict = {idx:word for idx,word in enumerate(vocab)}
 
-    def get_splits(self,seq_len=25,shifted=False):
-        corpus = self.corpus[1:] if shifted else self.corpus[:-1]
+    def get_splits(self,seq_len=25,repeat=1,shifted=False):
+        corpus = np.tile(self.corpus, repeat)
+        corpus = corpus[1:] if shifted else corpus[:-1]
         off_set = len(corpus) % seq_len
         # if last split is unequal the other ones, just skip it
         return corpus[:-off_set].reshape((len(corpus)/seq_len,seq_len)).T

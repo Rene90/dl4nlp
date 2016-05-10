@@ -17,7 +17,7 @@ from blocks.bricks.cost import CategoricalCrossEntropy
 
 from blocks.model import Model
 from blocks.graph import ComputationGraph
-from blocks.algorithms import GradientDescent, Scale
+from blocks.algorithms import GradientDescent, Adam
 from blocks.extensions.monitoring import DataStreamMonitoring, TrainingDataMonitoring
 from blocks.main_loop import MainLoop
 
@@ -32,13 +32,17 @@ from blocks.extensions.saveload import Checkpoint
 
 from dataset import Corpus, createDataset
 corpus = Corpus(open("corpus.txt").read())
-train_data,vocab_size = createDataset(corpus=corpus, sequence_length=100)
+train_data,vocab_size = createDataset(
+    corpus=corpus,
+    sequence_length=750,
+    repeat=20
+)
 
 def initLayers(layers):
     for l in layers: l.initialize()
 
 SAVE_PATH = "./model_checkpoints/savepoint.pkl"
-HIDDEN_DIM = 500
+HIDDEN_DIM = 200
 VOCAB_DIM = vocab_size
 #print "Vocabulary size of", vocab_size
 
@@ -85,31 +89,35 @@ cg = ComputationGraph(cost)
 #print VariableFilter(roles=[WEIGHT])(cg.variables)
 W1,H,W2 = VariableFilter(roles=[WEIGHT])(cg.variables)
 
-main_loop = MainLoop(
-    data_stream = DataStream(
+
+if __name__ == "__main__":
+
+    main_loop = MainLoop(
+        data_stream = DataStream(
         train_data,
         iteration_scheme = SequentialScheme(
             train_data.num_examples,
-            batch_size = 10
+            batch_size = 50
         )
     ),
     algorithm = GradientDescent(
         cost  = cost,
         parameters = cg.parameters,
-        step_rule = Scale(learning_rate=0.1)
+        step_rule = Adam()
     ),
     extensions = [
         #DataStreamMonitoring(variables=[cost]),
-        FinishAfter(after_n_epochs=20),
+        FinishAfter(),
         Printing(),
         ProgressBar(),
         TrainingDataMonitoring([cost,], after_batch=True),
-        Checkpoint(SAVE_PATH),
+        Checkpoint(SAVE_PATH, every_n_epochs=1),
     ],
     model = Model(y_hat)
 )
-main_loop.run()
-
-#import blocks.serialization.load
-
-model = main_loop.model
+    main_loop.run()
+if _reload_:
+    # test
+    from blocks.extensions.saveload import load
+    main_loop = load(SAVE_PATH)
+    main_loop.run()

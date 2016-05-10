@@ -8,7 +8,7 @@
 import theano
 import numpy as np
 
-from blocks.extension.saveload import load
+from blocks.extensions.saveload import load
 SAVE_PATH = "./model_checkpoints/savepoint.pkl"
 
 from dataset import Corpus
@@ -26,21 +26,20 @@ def sample_chars(model, num_chars, vocab_size, init_char=0):
     f = theano.function([v_inchar], v_softmax, updates=[(v_init, v_states[0][0])])
     #f = theano.function([v_inchar], v_softmax)
 
-    seq = np.array([[init_char]], dtype=np.int32)
-    out = seq
-    for i in range(num_chars):
-        dist = f(out)[0]
-        sample = np.random.choice(vocab_size,1,p=dist)
-        seq = np.hstack([seq, np.atleast_2d(sample)])
-
+    seq = [init_char]
+    for _ in xrange(num_chars):
+        dist = f(np.atleast_2d(seq[-1]).astype(np.int32))[0]
+        sample = np.random.choice(vocab_size,1,p=dist)[0]
+        seq.append(sample)
+    #print seq
     return seq
 
 def sample_text(model, num_chars, corpus):
-     return "".join(corpus.decode(sample_chars(model, num_chars, corpus.vocab_size())[0]))
+     return "".join(corpus.decode(sample_chars(model, num_chars, corpus.vocab_size())))
 
 corpus = Corpus(open("corpus.txt").read())
 
 main_loop = load(SAVE_PATH)
 model = main_loop.model
 
-print sample_text(model, 1000, corpus)
+print sample_text(model, 5000, corpus)
