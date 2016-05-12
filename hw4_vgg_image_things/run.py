@@ -24,7 +24,7 @@ tmp = x
 for layer in image_model.layers[:-1]:
     tmp = layer.apply(tmp)
 
-y_hat = image_model.layer[-1].apply(tmp)
+y_hat = image_model.layers[-1].apply(tmp)
 #cost  = image_model.layer[-1].
 
 predict = theano.function([x], y_hat, allow_input_downcast=True)
