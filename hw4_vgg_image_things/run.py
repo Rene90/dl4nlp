@@ -13,7 +13,7 @@ from stober.imagenet import ImagenetModel
 MODEL_PATH = "./data/imagenet-vgg-verydeep-16.mat"
 DATA_PATH = "/projects/korpora/mscoco/coco/cocotalk.h5"
 
-mscoco_data = h5py.File(DATA_PATH)
+mscoco_data = h5py.File(DATA_PATH, "r")
 
 image_model = ImagenetModel(MODEL_PATH)
 
@@ -31,4 +31,4 @@ predict = theano.function([x], y_hat, allow_input_downcast=True)
 
 res = []
 for imgs in mscoco_data["images"]:
-    res.append(predict(imgs))
+    res.append(predict(imgs)).argmax(5)

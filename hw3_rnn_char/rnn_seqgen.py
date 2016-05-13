@@ -44,6 +44,7 @@ from blocks.serialization import load
 from dataset import Corpus, createDataset
 
 if args.mode == "train":
+    vocab_size = 2 # TODO
     seq_len = 100
     dim = 10
     feedback_dim = 8
@@ -52,10 +53,10 @@ if args.mode == "train":
     transition = GatedRecurrent(name="transition", dim=dim,
                                 activation=Tanh())
     generator = SequenceGenerator(
-        Readout(readout_dim=num_states, source_names=["states"],
+        Readout(readout_dim=vocab_size, source_names=["states"],
                 emitter=SoftmaxEmitter(name="emitter"),
                 feedback_brick=LookupFeedback(
-                    num_states, feedback_dim, name='feedback'),
+                    vocab_size, feedback_dim, name='feedback'),
                 name="readout"),
         transition,
         weights_init = IsotropicGaussian(0.01),
@@ -100,18 +101,5 @@ elif mode == "sample":
     states, outputs, costs = [data[:, 0] for data in sample()]
 
     numpy.set_printoptions(precision=3, suppress=True)
-    print("Generation cost:\n{}".format(costs.sum()))
-
-    freqs = numpy.bincount(outputs).astype(floatX)
-    freqs /= freqs.sum()
-    print("Frequencies:\n {} vs {}".format(freqs,
-                                           MarkovChainDataset.equilibrium))
-
-    trans_freqs = numpy.zeros((num_states, num_states), dtype=floatX)
-    for a, b in zip(outputs, outputs[1:]):
-        trans_freqs[a, b] += 1
-    trans_freqs /= trans_freqs.sum(axis=1)[:, None]
-    print("Transition frequencies:\n{}\nvs\n{}".format(
-        trans_freqs, MarkovChainDataset.trans_prob))
 else:
     assert False
