@@ -7,7 +7,7 @@
 #
 import argparse
 parser = argparse.ArgumentParser()
-parser.add_argument("--retrain", action="store_true", 
+parser.add_argument("--retrain", action="store_true",
                                  default=False,
                                  dest="retrain")
 parser.add_argument("--model", action="store",
@@ -47,7 +47,7 @@ from rnn_model import create_rnn
 
 if __name__ == "__main__":
     args = parser.parse_args()
-    
+
     if args.retrain:
         main_loop = load(args.model)
     else:
@@ -84,7 +84,5 @@ if __name__ == "__main__":
             ],
             model = Model(y_hat)
         )
-    
-    main_loop.run()
 
-    
+    main_loop.run()
