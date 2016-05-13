@@ -31,4 +31,4 @@ predict = theano.function([x], y_hat, allow_input_downcast=True)
 
 res = []
 for imgs in mscoco_data["images"]:
-    res.append(predict(imgs)).argmax(5)
+    res.append(predict(imgs).argsort()[:5])
