@@ -11,7 +11,7 @@ import h5py
 
 from stober.imagenet import ImagenetModel
 MODEL_PATH = "./data/imagenet-vgg-verydeep-16.mat"
-DATA_PATH = "/projects/korpora/mscoco/coco.hdf5"
+DATA_PATH = "/projects/korpora/mscoco/coco/cocotalk.h5"
 
 mscoco_data = h5py.File(DATA_PATH)
 
@@ -29,4 +29,6 @@ y_hat = image_model.layers[-1].apply(tmp)
 
 predict = theano.function([x], y_hat, allow_input_downcast=True)
 
-res = predict(mscoco_data)
+res = []
+for imgs in mscoco_data["images"]:
+    res.append(predict(imgs))
