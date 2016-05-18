@@ -54,9 +54,9 @@ if __name__ == "__main__":
         # create Corpus and Dateset
         corpus = Corpus(open(args.corpus).read())
         train_data,vocab_size = createDataset(
-            corpus=corpus,
-            sequence_length=750,
-            repeat=20
+            corpus = corpus,
+            sequence_length = 750,
+            repeat = 20
         )
         # create Computation Graph
         cg, layers, y_hat, cost = create_rnn(args.hidden, vocab_size, mode=args.mode)

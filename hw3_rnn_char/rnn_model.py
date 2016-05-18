@@ -19,10 +19,11 @@ def create_rnn(hidden_dim, vocab_dim,mode="rnn"):
     x = tensor.imatrix('inchar')
     y = tensor.imatrix('outchar')
 
-    #
+    # 
     W = LookupTable(
         name = "W1",
-        dim = hidden_dim*4,
+        #dim = hidden_dim*4,
+        dim = hidden_dim,
         length = vocab_dim,
         weights_init = initialization.IsotropicGaussian(0.01),
         biases_init = initialization.Constant(0)
@@ -31,7 +32,7 @@ def create_rnn(hidden_dim, vocab_dim,mode="rnn"):
         # Long Short Term Memory
         H = LSTM(
             hidden_dim, 
-            name = 'lstm',
+            name = 'H',
             weights_init = initialization.IsotropicGaussian(0.01),
             biases_init = initialization.Constant(0.0)
         )
@@ -43,7 +44,7 @@ def create_rnn(hidden_dim, vocab_dim,mode="rnn"):
             activation = Tanh(),
             weights_init = initialization.IsotropicGaussian(0.01)
         )
-    #
+    # 
     S = Linear(
         name = "W2",
         input_dim = hidden_dim,
@@ -58,7 +59,7 @@ def create_rnn(hidden_dim, vocab_dim,mode="rnn"):
 
     initLayers([W,H,S])
     activations = W.apply(x)
-    hiddens = H.apply(activations)[0]
+    hiddens = H.apply(activations)#[0]
     activations2 = S.apply(hiddens)
     y_hat = A.apply(activations2, extra_ndim=1)
     cost = A.categorical_cross_entropy(y, activations2, extra_ndim=1).mean()
