@@ -29,6 +29,13 @@ y_hat = image_model.layers[-1].apply(tmp)
 
 predict = theano.function([x], y_hat, allow_input_downcast=True)
 
-res = []
-for imgs in mscoco_data["images"]:
-    res.append(predict(imgs).argsort()[:5])
+labels = image_model.M[0]["classes"][0][0][0][1][0]
+
+image_number = len(mscoco_data["images"])
+for idx, imgs in enumerate(mscoco_data["images"]):
+    indices = predict([imgs]).argsort()[0][:-6:-1]
+    label_list = labels[indices]
+    print "#{}-{}".format(idx,image_number),
+    for l in label_list:
+        print l ,
+    print ""
