@@ -58,11 +58,11 @@ if args.mode == "train":
                                 activation=Tanh())
     generator = SequenceGenerator(
         Readout(readout_dim = vocab_size,
-                source_names = ["states"],
+                source_names = ["states"], # transition.apply.states ???
                 emitter = SoftmaxEmitter(name = "emitter"),
                 feedback_brick = LookupFeedback(
-                    vocab_size, 
-                    feedback_dim, 
+                    vocab_size,
+                    feedback_dim,
                     name = 'feedback'
                 ),
                 name = "readout"),
@@ -77,7 +77,7 @@ if args.mode == "train":
 
     # Build the cost computation graph.
     x = tensor.lmatrix('inchar')
-    
+
     cost = generator.cost(outputs=x)
     cost.name = "sequence_cost"
 
@@ -116,15 +116,15 @@ elif args.mode == "sample":
     main_loop = load(open(args.model, "rb"))
     # get the one and only brick in the computation graph
     generator = main_loop.model.get_top_bricks()[0]
-    
+
     sample = ComputationGraph(generator.generate(
         n_steps = args.sample_size,
         batch_size = 1,
         iterate = True
     )).get_theano_function()
-    
+
     states, outputs, costs = [data[:, 0] for data in sample()]
-    
+
     print "".join(corpus.decode(outputs))
 else:
     assert False
