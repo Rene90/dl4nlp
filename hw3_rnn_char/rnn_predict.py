@@ -43,4 +43,4 @@ args = getArguments()
 main_loop = load(args.model)
 model = main_loop.model
 
-print sample_text(model, args.sample_size, corpus)
+#print sample_text(model, args.sample_size, corpus)
