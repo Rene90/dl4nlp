@@ -6,17 +6,22 @@
 #
 from six import wraps
 
+from theano import tensor
+
 from blocks.bricks.recurrent import recurrent, BaseRecurrent
 from blocks.bricks.interfaces import Initializable
 from blocks.bricks.base import Application, application, Brick, lazy
+from blocks.roles import add_role, WEIGHT
+
+from blocks.utils import (pack, shared_floatx_nans, shared_floatx_zeros,
+                          dict_union, dict_subset, is_shared_variable)
 
 class MySimpleRecurrent(BaseRecurrent, Initializable):
     @lazy(allocation=['dim'])
     def __init__(self, dim, activation, **kwargs):
-        self.dim = dim
-        children = [activation]
-        kwargs.setdefault('children', []).extend(children)
         super(MySimpleRecurrent, self).__init__(**kwargs)
+        self.dim = dim
+        self.children = [activation]
 
     @property
     def W(self):

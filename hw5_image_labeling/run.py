@@ -45,6 +45,9 @@ from blocks.select import Selector
 from stober.imagenet import ImagenetModel
 from MySimpleRecurrent import MySimpleRecurrent
 
+from rnn_argparse import getArguments
+args = getArguments()
+
 ########################################################################
 # LOAD DATA
 ########################################################################
@@ -138,7 +141,7 @@ def getRnnGenerator(vocab_size,hidden_dim,input_dim=512):
         name = "generator"
     )
     generator.push_initialization_config()
-    transition.weights_init = IsotropicGaussian(0.01)
+    generator.transition.weights_init = IsotropicGaussian(0.01)
     generator.initialize()
     
     return generator
@@ -166,7 +169,7 @@ if __name__ == "__main__":
     print "initialized..."
     algorithm = GradientDescent(
         cost = cost,
-        parameters = list(Selector(generator).get_parameters().values()),
+        parameters = list(Selector(rnn).get_parameters().values()),
         step_rule = Adam(),
         # because we want use all the stuff in the training data
         on_unused_sources = 'ignore'
