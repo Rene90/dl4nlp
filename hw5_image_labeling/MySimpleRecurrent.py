@@ -1,10 +1,15 @@
 #!/usr/bin/python
 #
-# author:
-# 
-# date: 
-# description:
+# author: koller
 #
+# description: just copied the template from the website
+#
+from six import wraps
+
+from blocks.bricks.recurrent import recurrent, BaseRecurrent
+from blocks.bricks.interfaces import Initializable
+from blocks.bricks.base import Application, application, Brick, lazy
+
 class MySimpleRecurrent(BaseRecurrent, Initializable):
     @lazy(allocation=['dim'])
     def __init__(self, dim, activation, **kwargs):
