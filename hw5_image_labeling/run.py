@@ -44,14 +44,45 @@ LABELS = json.load(open("/projects/korpora/mscoco/coco/cocotalk.json", "r"))
 IMG_MODEL = ImagenetModel("/projects/korpora/mscoco/coco/imagenet-vgg-verydeep-16.mat")
 
 ########################################################################
+# DATASET
+########################################################################
+class ImageLabelingDataset(Dataset):
+    def __init__(self, **kwargs):
+        self.provides_sources = ('image', 'label')
+         # for technical reasons
+        self.axis_labels = None
+        self.images = MSCOCO["images"]
+        self.labels = MSCOCO["labels"]
+        self.vocab_size = max(map(int, LABELS["ix_to_word"].keys()))
+        super(ImageLabelingDataset, self).__init__(**kwargs)
+    
+    def get_vocab_size(self):
+        return self.vocab_size
+    
+    def get_data(self, state=None, request=None):
+        return self.images[request], self.labels[request]
+
+########################################################################
 # AUXILIARIES
 ########################################################################
 def idx2label(txt):
-    " ".join(LABELS["ix_to_word"].get(str(w), "<unk>") for w in txt)
+    " ".join(LABELS["ix_to_word"].get(str(w), "") for w in txt)
 
 ########################################################################
 # NN DEFs
 ########################################################################
+
+def createConvNetFn():
+    """
+    Load the convnet given the different layers defined in ImageModel
+    Apply the network to the given input and return the so applied net
+    """
+    x = tensor.tensor4("input", dtype="float32")
+    y_hat = x
+    for layer in IMG_MODEL.layers[:-1]:
+        y_hat = layer.apply(y_hat)
+    predict = theano.function([x], y_hat, allow_input_downcast=True)
+    return predict
 
 def applyConvNet(x):
     """
@@ -101,10 +132,11 @@ def applyRNN(x,vocab_size,input_dim=512):
 # Main
 ########################################################################
 if __name__ == "__name__":
-    dataset = None
+    dataset = ImageLabelingCorpus()
     
-    
-    x = tensor.tensor4("input", dtype="float32")
-    image_activation = applyConvNet(x)
-    y_hat = applyRNN(x,
+    vocab_size = dataset.get_vocab_size()
+    x = tensor.matrix("input", dtype="float32")
+    image_act_fn = createConvNetFn()
+    y_hat = applyRNN(x,vocab_size,image_act_fn)
+    y_hat.cost(label, context=)
     
