@@ -74,8 +74,9 @@ def idx2label(txt):
 
 def createConvNetFn():
     """
-    Load the convnet given the different layers defined in ImageModel
-    Apply the network to the given input and return the so applied net
+    Returns the prediction function of the conv net which can be used
+    separately to transform an image into either class probs or one level
+    earlier returning the last hidden activation (might have more value)
     """
     x = tensor.tensor4("input", dtype="float32")
     y_hat = x
