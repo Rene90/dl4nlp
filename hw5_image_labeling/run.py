@@ -8,9 +8,12 @@
 ########################################################################
 # START IMPORT
 ########################################################################
+import numpy as np
 import h5py
 import json
 import theano
+#theano.config.mode = "DebugMode"
+#theano.config.exeption_verbosity = "high"
 from theano import tensor
 ########################################################################
 from blocks.initialization import (
@@ -39,6 +42,8 @@ from blocks.extensions import FinishAfter, Printing, ProgressBar
 #from blocks.extensions.saveload import load
 from blocks.serialization import load
 from blocks.monitoring import aggregation # ???
+from blocks.model import Model
+from blocks.extensions.monitoring import DataStreamMonitoring, TrainingDataMonitoring
 
 from blocks.select import Selector
 ########################################################################
@@ -66,7 +71,8 @@ class ImageLabelingDataset(Dataset):
         self.axis_labels = None
         self.images = MSCOCO["image"]
         self.labels = MSCOCO["sequence"]
-        self.vocab_size = max(map(int, LABELS["ix_to_word"].keys()))
+        self.vocab_size = max(map(int, LABELS["ix_to_word"].keys()))+1
+        self.num_examples = self.images.shape[0]
         super(ImageLabelingDataset, self).__init__(**kwargs)
     
     def get_vocab_size(self):
@@ -76,7 +82,9 @@ class ImageLabelingDataset(Dataset):
         return self.images.shape[1]
     
     def get_data(self, state=None, request=None):
-        return self.images[request], self.labels[request]
+        y = self.labels[request]
+        y = np.hstack((np.zeros((y.shape[0],1), dtype=int),y))
+        return self.images[request], y.T
 
 ########################################################################
 # AUXILIARIES
@@ -163,6 +171,9 @@ if __name__ == "__main__":
     #image_act_fn = createConvNetFn()
     #y_hat = applyRNN(x,vocab_size,image_act_fn)
     hidden_dim = dataset.get_input_dim()
+
+    #print vocab_size, hidden_dim
+    
     rnn = getRnnGenerator(vocab_size,hidden_dim)
     cost = rnn.cost(y, context=x)
     cost.name = "sequence_cost"
@@ -180,17 +191,17 @@ if __name__ == "__main__":
             dataset,
             iteration_scheme = SequentialScheme(
                 dataset.num_examples,
-                batch_size = 20
+                batch_size = 80
             )
         ),
         model=Model(cost),
         extensions=[
             FinishAfter(),
-            TrainingDataMonitoring([cost], prefix="this_step",
-                                           after_batch=True),
+            #TrainingDataMonitoring([cost], prefix="this_step",
+            #                               after_batch=True),
             TrainingDataMonitoring([cost], prefix="average",
                                            every_n_batches=100),
-            Checkpoint(args.model, every_n_epochs=5),
-            Printing(every_n_batches=100)])
+            Checkpoint(args.model, every_n_batches=100000),
+            Printing(every_n_batches=10000)])
     print "start training"
     main_loop.run()

@@ -57,7 +57,7 @@ class MySimpleRecurrent(BaseRecurrent, Initializable):
     @application(contexts=["context"])
     def initial_states(self, batch_size, *args, **kwargs):
         init = kwargs["context"]
-        return init.T
+        return init
 
     @initial_states.property('outputs')
     def initial_states_outputs(self):
